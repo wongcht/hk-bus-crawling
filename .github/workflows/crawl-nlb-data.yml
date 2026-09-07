@@ -8,11 +8,8 @@ jobs:
   Crawl-NLB-Data:
     runs-on: ubuntu-latest
 
-    env:
-      AWS_ENDPOINT_URL: ${{ secrets.AWS_ENDPOINT_URL }}
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+    permissions:
+      contents: write
 
     steps:
       - name: Check out repository code
@@ -32,7 +29,23 @@ jobs:
           REQUEST_LIMIT: "6"
         run: uv run python ./crawling/nlb_crawl.py --force
 
+      - name: Publish NLB raw data to "latest-nlb" release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest-nlb
+          name: Latest NLB raw data
+          body: Automatically updated by the Crawl NLB Data workflow.
+          files: |
+            data/nlb.raw.routeList.json
+            data/nlb.raw.routeStopList.json
+            data/nlb.raw.stopList.json
+
       - name: Upload NLB raw data to S3
+        env:
+          AWS_ENDPOINT_URL: ${{ secrets.AWS_ENDPOINT_URL }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
         run: |
           pids=()
           aws s3 cp data/nlb.raw.routeList.json s3://${{ secrets.AWS_S3_BUCKET }}/transport/nlb/nlb.raw.routeList.json & pids+=($!)

@@ -10,12 +10,7 @@ jobs:
 
     permissions:
       issues: write
-
-    env:
-      AWS_ENDPOINT_URL: ${{ secrets.AWS_ENDPOINT_URL }}
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+      contents: write
 
     steps:
       - name: Check out repository code
@@ -36,7 +31,23 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: uv run python ./crawling/ctb_crawl.py --force
 
+      - name: Publish CTB raw data to "latest-ctb" release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest-ctb
+          name: Latest CTB raw data
+          body: Automatically updated by the Crawl CTB Data workflow.
+          files: |
+            data/ctb.raw.routeList.json
+            data/ctb.raw.routeStopList.json
+            data/ctb.raw.stopList.json
+
       - name: Upload CTB raw data to S3
+        env:
+          AWS_ENDPOINT_URL: ${{ secrets.AWS_ENDPOINT_URL }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
         run: |
           pids=()
           aws s3 cp data/ctb.raw.routeList.json s3://${{ secrets.AWS_S3_BUCKET }}/transport/ctb/ctb.raw.routeList.json & pids+=($!)
