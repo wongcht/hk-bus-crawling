@@ -122,6 +122,23 @@ jobs:
           aws s3 cp data/gtfs_operators_stops_map.json s3://${{ secrets.AWS_S3_BUCKET }}/transport/integrated/gtfs_operators_stops_map.json & pids+=($!)
           for pid in "${pids[@]}"; do wait "$pid"; done
 
+      - name: Publish integrated data to "latest" release
+        if: steps.target-path.outputs.target-path == '/'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          name: Latest crawled data
+          body: Automatically updated by the Data Fetching workflow. Always reflects the current gh-pages root output.
+          files: |
+            data/holidays.json
+            data/gtfs.json
+            data/nearby_operators_stops.json
+            data/operators_stops.json
+            data/service_days.json
+            data/operators_routes.json
+            data/integrated_routes.json
+            data/gtfs_operators_stops_map.json
+
       - name: Archive crawling outputs
         uses: actions/upload-artifact@v7
         if: always()
