@@ -105,19 +105,6 @@ jobs:
           uv run python ./crawling/routeCompare.py
           uv run python ./crawling/mtrExits.py
 
-      - name: Upload integrated data to S3
-        run: |
-          pids=()
-          aws s3 cp data/holidays.json s3://${{ secrets.AWS_S3_BUCKET }}/transport/integrated/holidays.json & pids+=($!)
-          aws s3 cp data/gtfs.json s3://${{ secrets.AWS_S3_BUCKET }}/transport/integrated/gtfs.json & pids+=($!)
-          aws s3 cp data/nearby_operators_stops.json s3://${{ secrets.AWS_S3_BUCKET }}/transport/integrated/nearby_operators_stops.json & pids+=($!)
-          aws s3 cp data/operators_stops.json s3://${{ secrets.AWS_S3_BUCKET }}/transport/integrated/operators_stops.json & pids+=($!)
-          aws s3 cp data/service_days.json s3://${{ secrets.AWS_S3_BUCKET }}/transport/integrated/service_days.json & pids+=($!)
-          aws s3 cp data/operators_routes.json s3://${{ secrets.AWS_S3_BUCKET }}/transport/integrated/operators_routes.json & pids+=($!)
-          aws s3 cp data/integrated_routes.json s3://${{ secrets.AWS_S3_BUCKET }}/transport/integrated/integrated_routes.json & pids+=($!)
-          aws s3 cp data/gtfs_operators_stops_map.json s3://${{ secrets.AWS_S3_BUCKET }}/transport/integrated/gtfs_operators_stops_map.json & pids+=($!)
-          for pid in "${pids[@]}"; do wait "$pid"; done
-
       - name: Publish integrated data to "latest" release
         if: steps.target-path.outputs.target-path == '/'
         uses: softprops/action-gh-release@v2
@@ -134,6 +121,19 @@ jobs:
             data/operators_routes.json
             data/integrated_routes.json
             data/gtfs_operators_stops_map.json
+
+      - name: Upload integrated data to S3
+        run: |
+          pids=()
+          aws s3 cp data/holidays.json s3://${{ secrets.AWS_S3_BUCKET }}/transport/integrated/holidays.json & pids+=($!)
+          aws s3 cp data/gtfs.json s3://${{ secrets.AWS_S3_BUCKET }}/transport/integrated/gtfs.json & pids+=($!)
+          aws s3 cp data/nearby_operators_stops.json s3://${{ secrets.AWS_S3_BUCKET }}/transport/integrated/nearby_operators_stops.json & pids+=($!)
+          aws s3 cp data/operators_stops.json s3://${{ secrets.AWS_S3_BUCKET }}/transport/integrated/operators_stops.json & pids+=($!)
+          aws s3 cp data/service_days.json s3://${{ secrets.AWS_S3_BUCKET }}/transport/integrated/service_days.json & pids+=($!)
+          aws s3 cp data/operators_routes.json s3://${{ secrets.AWS_S3_BUCKET }}/transport/integrated/operators_routes.json & pids+=($!)
+          aws s3 cp data/integrated_routes.json s3://${{ secrets.AWS_S3_BUCKET }}/transport/integrated/integrated_routes.json & pids+=($!)
+          aws s3 cp data/gtfs_operators_stops_map.json s3://${{ secrets.AWS_S3_BUCKET }}/transport/integrated/gtfs_operators_stops_map.json & pids+=($!)
+          for pid in "${pids[@]}"; do wait "$pid"; done
 
       - name: Archive crawling outputs
         uses: actions/upload-artifact@v7
